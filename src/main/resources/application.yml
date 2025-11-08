@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: gateway
+    name: goblin-gateway
   cloud:
     gateway:
       server:
@@ -12,19 +12,21 @@ spring:
             - id: goblin-payment
               uri: ${GOBLIN_PAYMENT:http://localhost:8081}
               predicates:
-                - Path=/goblin-payment/**
+                - Path=/payment/**
               filters:
+                - AddRequestHeader=X-Goblin-Payment, payment-request
+                - AddResponseHeader=X-Goblin-Payment, payment-service
                 - StripPrefix=1
             - id: goblin-assistant
               uri: ${GOBLIN_ASSISTANT:http://localhost:8082}
               predicates:
-                - Path=/goblin-assistant/**
+                - Path=/assistant/**
               filters:
                 - StripPrefix=1
             - id: goblin-game-engine
               uri: ${GOBLIN_GAME_ENGINE:http://localhost:8083}
               predicates:
-                - Path=/goblin-game-engine/**
+                - Path=/game-engine/**
               filters:
                 - StripPrefix=1
 
@@ -32,7 +34,22 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
-  health:
-    kubernetes:
-      enabled: true
+        include: health,info,metrics,prometheus
+  otlp:
+    metrics:
+      export:
+        enabled: false
+        url: ${GOBLIN_OTLP:http://localhost:4318/v1/metrics}
+
+otel:
+  service:
+    name: ${spring.application.name}
+  exporter:
+    otlp:
+      endpoint: ${GOBLIN_OTEL:http://localhost:4318}
+  metrics:
+    exporter: none
+  traces:
+    exporter: none
+  logs:
+    exporter: none

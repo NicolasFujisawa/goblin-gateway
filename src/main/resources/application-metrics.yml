@@ -1,0 +1,15 @@
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: true
+        step: 10s
+otel:
+  service:
+    name: ${spring.application.name}
+  metrics:
+    exporter: otlp
+  traces:
+    exporter: otlp
+  logs:
+    exporter: otlp
