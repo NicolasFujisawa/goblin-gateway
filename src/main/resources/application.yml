@@ -4,18 +4,35 @@ server:
 spring:
   application:
     name: goblin-gateway
+  threads:
+    virtual:
+      enabled: true
+  output:
+    ansi:
+      enabled: always
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_REALM_URI:http://localhost:8094/realms/goblin-dev-realm}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8094/realms/goblin-dev-realm/protocol/openid-connect/certs}
   cloud:
     gateway:
       server:
         webflux:
+          default-filters:
+            - name: Retry
+              args:
+                retries: 3
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 1s
           routes:
             - id: goblin-payment
               uri: ${GOBLIN_PAYMENT:http://localhost:8081}
               predicates:
                 - Path=/payment/**
               filters:
-                - AddRequestHeader=X-Goblin-Payment, payment-request
-                - AddResponseHeader=X-Goblin-Payment, payment-service
                 - StripPrefix=1
             - id: goblin-assistant
               uri: ${GOBLIN_ASSISTANT:http://localhost:8082}
@@ -31,25 +48,12 @@ spring:
                 - StripPrefix=1
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
   otlp:
     metrics:
       export:
         enabled: false
         url: ${GOBLIN_OTLP:http://localhost:4318/v1/metrics}
 
-otel:
-  service:
-    name: ${spring.application.name}
-  exporter:
-    otlp:
-      endpoint: ${GOBLIN_OTEL:http://localhost:4318}
-  metrics:
-    exporter: none
-  traces:
-    exporter: none
-  logs:
-    exporter: none
+logging:
+  level:
+    org.springframework.security: DEBUG

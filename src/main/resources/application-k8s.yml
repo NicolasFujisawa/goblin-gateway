@@ -1,12 +1,9 @@
-spring:
-  cloud:
-    gateway:
-      server:
-        webflux:
-          routes:
-            - id: goblin-payment
-              uri: http://localhost:8081
-            - id: goblin-assistant
-              uri: http://localhost:8082
-            - id: goblin-game-engine
-              uri: http://localhost:8083
+management:
+  otlp:
+    metrics:
+      export:
+        url: ${OTEL_COLLECTOR_URL}/v1/metrics
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_COLLECTOR_URL}
